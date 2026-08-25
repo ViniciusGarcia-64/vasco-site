@@ -3,8 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
 
-SUPABASE_URL = "https://rzckltwastxfbwkgkndl.supabase.co"
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rzckltwastxfbwkgkndl.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+if not SUPABASE_KEY:
+    print("Erro: SUPABASE_KEY não configurada nos Secrets do GitHub.")
+    exit(1)
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -13,33 +17,30 @@ headers = {
 }
 
 def coletar_noticias():
-    url = "https://ge.globo.com/futebol/times/vasco/"
-    req = requests.get(url, headers=headers)
-    soup = BeautifulSoup(req.text, 'html.parser')
-    
-    posts = soup.find_all('a', class_='feed-post-link')
-    for p in posts[:5]:
-        titulo = p.text.strip()
-        link = p['href']
-        if titulo and link:
-            supabase.table('noticias').upsert(
-                {"titulo": titulo, "link": link, "fonte": "ge.globo"},
-                on_conflict='link'
-            ).execute()
-
-def coletar_jogos():
-    # Coleta agenda e resultados do Vasco no GE
-    url = "https://ge.globo.com/futebol/times/vasco/"
-    req = requests.get(url, headers=headers)
-    soup = BeautifulSoup(req.text, 'html.parser')
-    
-    # Busca blocos de jogos na página do time
-    jogos = soup.find_all('div', class_='veja-tambem') # Estrutura padrão de agenda/jogos
-    
-    # Exemplo base de integridade: consulta os dados existentes
-    # Para scrapers dinâmicos do GE, garantimos inserções seguras
-    print("Notícias e tabela de jogos sincronizadas com sucesso.")
+    try:
+        url = "https://ge.globo.com/futebol/times/vasco/"
+        req = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(req.text, 'html.parser')
+        
+        posts = soup.find_all('a', class_='feed-post-link')
+        novas = 0
+        for p in posts[:5]:
+            titulo = p.text.strip()
+            link = p.get('href')
+            if titulo and link:
+                try:
+                    supabase.table('noticias').insert({
+                        "titulo": titulo, 
+                        "link": link, 
+                        "fonte": "ge.globo"
+                    }).execute()
+                    novas += 1
+                except Exception:
+                    # Ignora se a notícia já estiver cadastrada
+                    pass
+        print(f"Coleta finalizada! {novas} novas notícias inseridas.")
+    except Exception as e:
+        print(f"Erro ao acessar ge.globo: {e}")
 
 if __name__ == "__main__":
     coletar_noticias()
-    coletar_jogos()
