@@ -1,10 +1,10 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
 
-# 1. COLE SUAS CHAVES AQUI DENTRO DAS ASPAS:
 SUPABASE_URL = "https://rzckltwastxfbwkgkndl.supabase.co"
-SUPABASE_KEY = "sb_secret_OsvFvagriM7QYhTulrubag_7RXWiSWp"
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
