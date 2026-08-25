@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vasco Central</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background-color: #f8f9fa; }
+    h1 { color: #000; border-bottom: 4px solid #d10000; padding-bottom: 10px; }
+    .card { background: #fff; padding: 16px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+    .card a { color: #111; text-decoration: none; font-weight: bold; font-size: 1.1em; display: block; }
+    .card a:hover { color: #d10000; }
+    .fonte { font-size: 0.8em; color: #777; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <h1>Vasco Central — Últimas Notícias</h1>
+  <div id="noticias">Carregando notícias...</div>
+
+  <script>
+    const SUPABASE_URL = "https://rzckltwastxfbwkgkndl.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_wAJgMnOM9XZd40hnRhhnVQ_j7sWWoNc";
+
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function carregarNoticias() {
+      const { data, error } = await client
+        .from('noticias')
+        .select('*')
+        .order('criado_em', { ascending: false });
+
+      if (error) {
+        document.getElementById('noticias').innerText = 'Erro ao carregar notícias.';
+        return;
+      }
+
+      document.getElementById('noticias').innerHTML = data.map(n => `
+        <div class="card">
+          <a href="${n.link}" target="_blank">${n.titulo}</a>
+          <div class="fonte">Fonte: ${n.fonte}</div>
+        </div>
+      `).join('');
+    }
+
+    carregarNoticias();
+  </script>
+</body>
+</html>
