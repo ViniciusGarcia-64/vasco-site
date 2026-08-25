@@ -81,10 +81,12 @@
         `).join('');
       }
 
-      // Classificação
+      // Classificação (com tratamento de erro/dados vazios)
       const { data: classificacao } = await client.from('classificacao').select('*').order('posicao', { ascending: true });
+      const tabelaEl = document.getElementById('tabela-classificacao');
+      
       if (classificacao && classificacao.length > 0) {
-        document.getElementById('tabela-classificacao').innerHTML = classificacao.map(c => `
+        tabelaEl.innerHTML = classificacao.map(c => `
           <tr class="${c.time.toLowerCase() === 'vasco' ? 'vasco-row' : ''}">
             <td>${c.posicao}º</td>
             <td class="time">${c.time}</td>
@@ -94,6 +96,8 @@
             <td>${c.saldo_gols}</td>
           </tr>
         `).join('');
+      } else {
+        tabelaEl.innerHTML = '<tr><td colspan="6" style="color:#777;">Tabela em atualização...</td></tr>';
       }
 
       // Jogos
