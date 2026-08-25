@@ -8,15 +8,17 @@
   <style>
     body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 0 20px; background-color: #f8f9fa; }
     h1 { color: #000; border-bottom: 4px solid #d10000; padding-bottom: 10px; margin-bottom: 30px; }
-    h2 { color: #111; border-left: 4px solid #d10000; padding-left: 10px; }
+    h2 { color: #111; border-left: 4px solid #d10000; padding-left: 10px; margin-top: 25px; margin-bottom: 15px; }
     .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
     .card { background: #fff; padding: 16px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
     .card a { color: #111; text-decoration: none; font-weight: bold; font-size: 1.05em; display: block; }
     .card a:hover { color: #d10000; }
     .fonte { font-size: 0.8em; color: #777; margin-top: 8px; }
-    .jogo-card { background: #fff; padding: 14px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #000; }
+    .jogo-card { background: #fff; padding: 14px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .placar { font-size: 1.15em; font-weight: bold; color: #d10000; margin-top: 4px; }
     .campeonato { font-size: 0.75em; text-transform: uppercase; color: #888; font-weight: bold; }
+    .banner-img { width: 100%; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: block; }
   </style>
 </head>
 <body>
@@ -31,7 +33,12 @@
 
     <div>
       <h2>Próximos Jogos</h2>
-      <div id="jogos">Carregando jogos...</div>
+      <div id="proximos-jogos">Carregando...</div>
+
+      <h2>Últimos Resultados</h2>
+      <div id="ultimos-jogos">Carregando...</div>
+
+      <img class="banner-img" src="" alt="Vasco em campo">
     </div>
   </div>
 
@@ -57,20 +64,34 @@
         `).join('');
       }
 
-      // Carrega Jogos
+      // Carrega Todos os Jogos
       const { data: jogos } = await client
         .from('jogos')
         .select('*')
-        .order('data_hora', { ascending: true });
+        .order('data_hora', { ascending: false });
 
       if (jogos) {
-        document.getElementById('jogos').innerHTML = jogos.map(j => `
+        // Próximos Jogos (onde placar é nulo)
+        const proximos = jogos.filter(j => j.placar_vasco === null);
+        // Últimos Resultados (onde placar foi preenchido)
+        const ultimos = jogos.filter(j => j.placar_vasco !== null);
+
+        document.getElementById('proximos-jogos').innerHTML = proximos.length > 0 ? proximos.map(j => `
           <div class="jogo-card">
             <div class="campeonato">${j.campeonato}</div>
             <strong>Vasco x ${j.adversario}</strong>
             <div class="fonte">${new Date(j.data_hora).toLocaleString('pt-BR')}</div>
           </div>
-        `).join('');
+        `).join('') : '<p style="color:#777; font-size:0.9em;">Nenhum jogo agendado.</p>';
+
+        document.getElementById('ultimos-jogos').innerHTML = ultimos.length > 0 ? ultimos.map(j => `
+          <div class="jogo-card">
+            <div class="campeonato">${j.campeonato}</div>
+            <strong>Vasco x ${j.adversario}</strong>
+            <div class="placar">Placar: ${j.placar_vasco} x ${j.placar_adv}</div>
+            <div class="fonte">${new Date(j.data_hora).toLocaleDateString('pt-BR')}</div>
+          </div>
+        `).join('') : '<p style="color:#777; font-size:0.9em;">Nenhum resultado registrado.</p>';
       }
     }
 
