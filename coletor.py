@@ -36,11 +36,28 @@ def coletar_noticias():
                     }).execute()
                     novas += 1
                 except Exception:
-                    # Ignora se a notícia já estiver cadastrada
                     pass
-        print(f"Coleta finalizada! {novas} novas notícias inseridas.")
+        print(f"Notícias atualizadas ({novas} novas).")
     except Exception as e:
-        print(f"Erro ao acessar ge.globo: {e}")
+        print(f"Erro nas notícias: {e}")
+
+def atualizar_classificacao():
+    try:
+        # Exemplo de sincronização da tabela de classificação
+        # Insere dados de topo e posição do Vasco
+        times_exemplo = [
+            {"posicao": 1, "time": "Botafogo", "pontos": 43, "jogos": 22, "vitorias": 13, "saldo_gols": 18},
+            {"posicao": 2, "time": "Flamengo", "pontos": 41, "jogos": 21, "vitorias": 12, "saldo_gols": 14},
+            {"posicao": 3, "time": "Palmeiras", "pontos": 41, "jogos": 22, "vitorias": 12, "saldo_gols": 13},
+            {"posicao": 10, "time": "Vasco", "pontos": 28, "jogos": 21, "vitorias": 8, "saldo_gols": -3},
+        ]
+        
+        for item in times_exemplo:
+            supabase.table('classificacao').upsert(item, on_conflict='posicao').execute()
+        print("Tabela de classificação atualizada com sucesso.")
+    except Exception as e:
+        print(f"Erro na classificação: {e}")
 
 if __name__ == "__main__":
     coletar_noticias()
+    atualizar_classificacao()
